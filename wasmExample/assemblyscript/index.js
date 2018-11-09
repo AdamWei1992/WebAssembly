@@ -1,6 +1,6 @@
 
 
-var myModule = require('./module.js')
+//var myModule = require('./module.js')
 
 
 // myModule('c', {
@@ -15,10 +15,10 @@ var myModule = require('./module.js')
 //     console.log('abc')
 // })
 
-myModule('ts').then(instance=>{
-    var tdate = Date.now()
-    console.log(`${instance.exports.f(45)}----ts.wasm----${Date.now() - tdate}`)
-})
+// myModule('ts').then(instance=>{
+//     var tdate = Date.now()
+//     console.log(`${instance.exports.f(45)}----ts.wasm----${Date.now() - tdate}`)
+// })
 
 // function f(x){
 //     if (x === 1 || x === 2) {
@@ -28,3 +28,25 @@ myModule('ts').then(instance=>{
 // }
 // var jdate = Date.now()
 // console.log(`${f(45)}----js----${Date.now() - jdate}`)
+
+//接入webpack
+import('./wasm/c.wasm').then(module=>{
+    return WebAssembly.instantiate(module, {
+        env: {
+            memoryBase: 256,
+        }
+    })
+}).then(module => {
+    console.log('module------'+module)
+    console.log(module._func(20))
+});
+
+// import('./wasm/c.wasm').then(module => {
+//     console.log('module------'+module)
+//     console.log(module._func(20))
+// });
+//
+// import('./wasm/ts.wasm').then(module => {
+//     console.log('fibonacci:---' + module.f(40))
+// });
+
