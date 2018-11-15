@@ -11,7 +11,7 @@ function toUint8Array(buf) {
 }
 module.exports = (filename, imports)=> {
     // 读取 wasm 文件，并转换成 byte 数组
-    const buffer = toUint8Array(fs.readFileSync(__dirname + `/dist/${filename}.wasm`));
+    const buffer = toUint8Array(fs.readFileSync(__dirname + `/wasm/${filename}.wasm`));
     // 编译 wasm 字节码到机器码
     return WebAssembly.compile(buffer).then(module => {
             // 实例化模块

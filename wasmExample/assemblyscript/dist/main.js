@@ -2,25 +2,6 @@
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
 /******/
-/******/ 	// object to store loaded chunks
-/******/ 	// "0" means "already loaded"
-/******/ 	var installedChunks = {
-/******/ 		"main": 0
-/******/ 	};
-/******/
-/******/ 	// object to store loaded and loading wasm modules
-/******/ 	var installedWasmModules = {};
-/******/
-/******/ 	function promiseResolve() { return Promise.resolve(); }
-/******/
-/******/ 	var wasmImportObjects = {
-/******/ 		"./wasm/c.wasm": function() {
-/******/ 			return {
-/******/
-/******/ 			};
-/******/ 		},
-/******/ 	};
-/******/
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
 /******/
@@ -45,74 +26,6 @@
 /******/ 		return module.exports;
 /******/ 	}
 /******/
-/******/ 	// This file contains only the entry chunk.
-/******/ 	// The chunk loading function for additional chunks
-/******/ 	__webpack_require__.e = function requireEnsure(chunkId) {
-/******/ 		var promises = [];
-/******/
-/******/
-/******/ 		// require() chunk loading for javascript
-/******/
-/******/ 		// "0" is the signal for "already loaded"
-/******/ 		if(installedChunks[chunkId] !== 0) {
-/******/ 			var chunk = require("./" + chunkId + ".main.js");
-/******/ 			var moreModules = chunk.modules, chunkIds = chunk.ids;
-/******/ 			for(var moduleId in moreModules) {
-/******/ 				modules[moduleId] = moreModules[moduleId];
-/******/ 			}
-/******/ 			for(var i = 0; i < chunkIds.length; i++)
-/******/ 				installedChunks[chunkIds[i]] = 0;
-/******/ 		}
-/******/
-/******/ 		// Fetch + compile chunk loading for webassembly
-/******/
-/******/ 		var wasmModules = {"0":["./wasm/c.wasm"]}[chunkId] || [];
-/******/
-/******/ 		wasmModules.forEach(function(wasmModuleId) {
-/******/ 			var installedWasmModuleData = installedWasmModules[wasmModuleId];
-/******/
-/******/ 			// a Promise means "currently loading" or "already loaded".
-/******/ 			if(installedWasmModuleData)
-/******/ 				promises.push(installedWasmModuleData);
-/******/ 			else {
-/******/ 				var importObject = wasmImportObjects[wasmModuleId]();
-/******/ 				var req = new Promise(function (resolve, reject) {
-/******/ 					var { readFile } = require('fs');
-/******/ 					var { join } = require('path');
-/******/
-/******/ 					try {
-/******/ 						readFile(join(__dirname, "" + {"./wasm/c.wasm":"3d0e530292acf2dfc1ae"}[wasmModuleId] + ".module.wasm"), function(err, buffer){
-/******/ 							if (err) return reject(err);
-/******/
-/******/ 							// Fake fetch response
-/******/ 							resolve({
-/******/ 								arrayBuffer() { return Promise.resolve(buffer); }
-/******/ 							});
-/******/ 						});
-/******/ 					} catch (err) { reject(err); }
-/******/ 				});
-/******/ 				var promise;
-/******/ 				if(importObject instanceof Promise) {
-/******/ 					var bytesPromise = req.then(function(x) { return x.arrayBuffer(); });
-/******/ 					promise = Promise.all([
-/******/ 						bytesPromise.then(function(bytes) { return WebAssembly.compile(bytes); }),
-/******/ 						importObject
-/******/ 					]).then(function(items) {
-/******/ 						return WebAssembly.instantiate(items[0], items[1]);
-/******/ 					});
-/******/ 				} else {
-/******/ 					var bytesPromise = req.then(function(x) { return x.arrayBuffer(); });
-/******/ 					promise = bytesPromise.then(function(bytes) {
-/******/ 						return WebAssembly.instantiate(bytes, importObject);
-/******/ 					});
-/******/ 				}
-/******/ 				promises.push(installedWasmModules[wasmModuleId] = promise.then(function(res) {
-/******/ 					return __webpack_require__.w[wasmModuleId] = (res.instance || res).exports;
-/******/ 				}));
-/******/ 			}
-/******/ 		});
-/******/ 		return Promise.all(promises);
-/******/ 	};
 /******/
 /******/ 	// expose the modules object (__webpack_modules__)
 /******/ 	__webpack_require__.m = modules;
@@ -166,16 +79,6 @@
 /******/ 	// __webpack_public_path__
 /******/ 	__webpack_require__.p = "";
 /******/
-/******/ 	// uncaught error handler for webpack runtime
-/******/ 	__webpack_require__.oe = function(err) {
-/******/ 		process.nextTick(function() {
-/******/ 			throw err; // catch this error by using import().catch()
-/******/ 		});
-/******/ 	};
-/******/
-/******/ 	// object with all WebAssembly.instance exports
-/******/ 	__webpack_require__.w = {};
-/******/
 /******/
 /******/ 	// Load entry module and return exports
 /******/ 	return __webpack_require__(__webpack_require__.s = "./index.js");
@@ -190,7 +93,29 @@
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
-eval("\n\n//var myModule = require('./module.js')\n\n\n// myModule('c', {\n//     env: {\n//         memoryBase: 256,\n//     }\n// }).then(instance=>{\n//     console.log(instance)\n//     var cdate = Date.now()\n//     console.log(`${instance.exports._func(45)}----c.wasm----${Date.now() - cdate}`)\n//     //console.log(`${instance.instance.exports._func(45)}----c.wasm----${Date.now() - cdate}`)\n//     console.log('abc')\n// })\n\n// myModule('ts').then(instance=>{\n//     var tdate = Date.now()\n//     console.log(`${instance.exports.f(45)}----ts.wasm----${Date.now() - tdate}`)\n// })\n\n// function f(x){\n//     if (x === 1 || x === 2) {\n//         return 1;\n//     }\n//     return f(x - 1) + f(x - 2)\n// }\n// var jdate = Date.now()\n// console.log(`${f(45)}----js----${Date.now() - jdate}`)\n\n//接入webpack\n__webpack_require__.e(/*! import() */ 0).then(__webpack_require__.bind(null, /*! ./wasm/c.wasm */ \"./wasm/c.wasm\")).then(module=>{\n    return WebAssembly.instantiate(module, {\n        env: {\n            memoryBase: 256,\n        }\n    })\n}).then(module => {\n    console.log('module------'+module)\n    console.log(module._func(20))\n});\n\n// import('./wasm/c.wasm').then(module => {\n//     console.log('module------'+module)\n//     console.log(module._func(20))\n// });\n//\n// import('./wasm/ts.wasm').then(module => {\n//     console.log('fibonacci:---' + module.f(40))\n// });\n\n\n\n//# sourceURL=webpack:///./index.js?");
+eval("\n\nvar myModule = __webpack_require__(/*! ./module.js */ \"./module.js\")\n\n\nmyModule('c', {\n    env: {\n        memoryBase: 256,\n    }\n}).then(instance=>{\n    console.log(instance)\n    var cdate = Date.now()\n    console.log(`${instance.exports._func(45)}----c.wasm----${Date.now() - cdate}`)\n    //console.log(`${instance.instance.exports._func(45)}----c.wasm----${Date.now() - cdate}`)\n    console.log('abc')\n})\n\nmyModule('ts').then(instance=>{\n    var tdate = Date.now()\n    console.log(`${instance.exports.f(45)}----ts.wasm----${Date.now() - tdate}`)\n})\n\nfunction f(x){\n    if (x === 1 || x === 2) {\n        return 1;\n    }\n    return f(x - 1) + f(x - 2)\n}\nvar jdate = Date.now()\nconsole.log(`${f(45)}----js----${Date.now() - jdate}`)\n\n//接入webpack\n// import('./wasm/c.wasm').then(module=>{\n//     return WebAssembly.instantiate(module, {\n//         env: {\n//             memoryBase: 256,\n//         }\n//     })\n// }).then(module => {\n//     console.log('module------'+module)\n//     console.log(module._func(20))\n// });\n\n// import('./wasm/c.wasm').then(module => {\n//     console.log('module------'+module)\n//     console.log(module._func(20))\n// });\n//\n// import('./wasm/ts.wasm').then(module => {\n//     console.log('fibonacci:---' + module.f(40))\n// });\n\n\n\n//# sourceURL=webpack:///./index.js?");
+
+/***/ }),
+
+/***/ "./module.js":
+/*!*******************!*\
+  !*** ./module.js ***!
+  \*******************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+eval("/* WEBPACK VAR INJECTION */(function(__dirname) {\n\nconst fs = __webpack_require__(/*! fs */ \"fs\")\n\nfunction toUint8Array(buf) {\n    var u = new Uint8Array(buf.length);\n    for (var i = 0; i < buf.length; ++i) {\n      u[i] = buf[i];\n    }\n    return u; \n}\nmodule.exports = (filename, imports)=> {\n    // 读取 wasm 文件，并转换成 byte 数组\n    const buffer = toUint8Array(fs.readFileSync(__dirname + `/dist/${filename}.wasm`));\n    // 编译 wasm 字节码到机器码\n    return WebAssembly.compile(buffer).then(module => {\n            // 实例化模块\n            return new WebAssembly.Instance(module, imports)\n        })\n    // return WebAssembly.instantiate(buffer, imports)\n}\n\n/* WEBPACK VAR INJECTION */}.call(this, \"/\"))\n\n//# sourceURL=webpack:///./module.js?");
+
+/***/ }),
+
+/***/ "fs":
+/*!*********************!*\
+  !*** external "fs" ***!
+  \*********************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+eval("module.exports = require(\"fs\");\n\n//# sourceURL=webpack:///external_%22fs%22?");
 
 /***/ })
 
